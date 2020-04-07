@@ -18,6 +18,7 @@ class KeckKCWISpectrograph(spectrograph.Spectrograph):
     """
     Child to handle Keck/KCWI specific code
     """
+    ndet = 1
 
     def __init__(self):
         # Get it started
@@ -25,24 +26,24 @@ class KeckKCWISpectrograph(spectrograph.Spectrograph):
         self.spectrograph = 'keck_kcwi'
         self.telescope = telescopes.KeckTelescopePar()
         self.camera = 'KCWI'
-        self.detector = [pypeitpar.DetectorPar(
-                            dataext         = 0,
-                            specaxis        = 0,
-                            specflip        = False,
-                            xgap            = 0.,
-                            ygap            = 0.,
-                            ysize           = 1.,
-                            platescale      = 0.147,  # arcsec/pixel
-                            darkcurr        = None,  # <-- TODO : Need to set this
-                            saturation      = 65535.,
-                            nonlinear       = 0.95,       # For lack of a better number!
-                            numamplifiers   = 4,          # <-- This is provided in the header
-                            gain            = [0]*4,  # <-- This is provided in the header
-                            ronoise         = [0]*4,  # <-- TODO : Need to set this for other setups
-                            datasec         = ['']*4,     # <-- This is provided in the header
-                            oscansec        = ['']*4,     # <-- This is provided in the header
-                            suffix          = '_01'
-                            )]
+#        self.detector = [pypeitpar.DetectorPar(
+#                            dataext         = 0,
+#                            specaxis        = 0,
+#                            specflip        = False,
+#                            xgap            = 0.,
+#                            ygap            = 0.,
+#                            ysize           = 1.,
+#                            platescale      = 0.147,  # arcsec/pixel
+#                            darkcurr        = None,  # <-- TODO : Need to set this
+#                            saturation      = 65535.,
+#                            nonlinear       = 0.95,       # For lack of a better number!
+#                            numamplifiers   = 4,          # <-- This is provided in the header
+#                            gain            = [0]*4,  # <-- This is provided in the header
+#                            ronoise         = [0]*4,  # <-- TODO : Need to set this for other setups
+#                            datasec         = ['']*4,     # <-- This is provided in the header
+#                            oscansec        = ['']*4,     # <-- This is provided in the header
+#                            suffix          = '_01'
+#                            )]
         self.numhead = 1
         # Uses default timeunit
         # Uses default primary_hdrext
@@ -145,7 +146,6 @@ class KeckKCWISpectrograph(spectrograph.Spectrograph):
         """
         par = pypeitpar.PypeItPar()
         par['rdx']['spectrograph'] = 'keck_kcwi'
-        # par['flexure']['method'] = 'boxcar'
         # Set wave tilts order
 
         # Set the slit edge parameters
@@ -319,27 +319,29 @@ class KeckKCWISpectrograph(spectrograph.Spectrograph):
 
         NOTE: The amplifiers are arranged as follows:
 
-        (0,ny)	--------- (nx,ny)
-                | 3 | 4 |
-                ---------
-                | 1 | 2 |
-        (0,0)	--------- (nx, 0)
-
+        |   (0,ny)  --------- (nx,ny)
+        |           | 3 | 4 |
+        |           ---------
+        |           | 1 | 2 |
+        |     (0,0) --------- (nx, 0)
 
         Parameters
         ----------
         raw_file : str
-          Filename
+            Filename
         det (int or None):
-          Detector number
+            Detector number
+
         Returns
         -------
         array : ndarray
-          Combined image
+            Combined image
         hdu : HDUList
+            Opened fits file.
         sections : list
-          List of datasec, oscansec, ampsec sections
-          datasec, oscansec needs to be for an *unbinned* image as per standard convention
+            List of datasec, oscansec, ampsec sections. datasec,
+            oscansec needs to be for an *unbinned* image as per
+            standard convention
         """
         # Check for file; allow for extra .gz, etc. suffix
         fil = glob.glob(raw_file + '*')
