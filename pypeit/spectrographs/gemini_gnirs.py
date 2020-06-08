@@ -76,29 +76,24 @@ class GeminiGNIRSSpectrograph(spectrograph.Spectrograph):
         """
         par = pypeitpar.PypeItPar()
         par['rdx']['spectrograph'] = 'gemini_gnirs'
-        # No overscan
-        for key in par['calibrations'].keys():
-            if 'frame' in key:
-                par['calibrations'][key]['process']['overscan'] = 'none'
+
+        # Image processing steps
+        turn_off = dict(use_illumflat=False, use_biasimage=False, use_overscan=False, use_darkimage=False)
+        par.reset_all_processimages_par(**turn_off)
 
         # Flats
         par['calibrations']['flatfield']['tweak_slits_thresh'] = 0.90
         par['calibrations']['flatfield']['tweak_slits_maxfrac'] = 0.10
-        par['calibrations']['standardframe']['process']['illumflatten'] = False
-        par['scienceframe']['process']['illumflatten'] = False
 
-        # Finding objects
-        par['reduce']['skysub']['bspline_spacing'] = 0.8
-        par['reduce']['findobj']['sig_thresh'] = 5.0
+        # Reduce parameters
+        par['reduce']['findobj']['sig_thresh'] = 5.0          # Object finding threshold
         par['reduce']['findobj']['find_trim_edge'] = [2,2]    # Slit is too short to trim 5,5 especially
         par['reduce']['findobj']['find_cont_fit'] = False     # Don't continuum fit objfind for narrow slits
         par['reduce']['findobj']['find_npoly_cont'] = 0       # Continnum order for determining thresholds
-        # Extraction
+        par['reduce']['skysub']['bspline_spacing'] = 0.8
+        par['reduce']['skysub']['global_sky_std']  = False    # Do not perform global sky subtraction for standard stars
+        par['reduce']['skysub']['no_poly'] = True             # Do not use polynomial degree of freedom for global skysub
         par['reduce']['extraction']['model_full_slit'] = True  # local sky subtraction operates on entire slit
-        # Sky Subtraction
-        par['reduce']['skysub']['global_sky_std']  = False # Do not perform global sky subtraction for standard stars
-        par['reduce']['skysub']['no_poly'] = True         # Do not use polynomial degree of freedom for global skysub
-
 
         # Do not correct for flexure
         par['flexure']['spec_method'] = 'skip'
@@ -109,15 +104,9 @@ class GeminiGNIRSSpectrograph(spectrograph.Spectrograph):
         par['calibrations']['standardframe']['exprng'] = [None, 30]
         par['scienceframe']['exprng'] = [30, None]
 
-        # Do not bias subtract
-        #par['scienceframe']['useframe'] = 'overscan'
-        # This is a hack for now until we can specify for each image type what to do. Bias currently
-        # controls everything
-        par['calibrations']['biasframe']['useframe'] = 'none'
-
         # Sensitivity function parameters
         par['sensfunc']['algorithm'] = 'IR'
-        par['sensfunc']['polyorder'] = 8
+        par['sensfunc']['polyorder'] = 6
         par['sensfunc']['IR']['telgridfile'] = resource_filename('pypeit', '/data/telluric/TelFit_MaunaKea_3100_26100_R20000.fits')
 
         return par
@@ -232,7 +221,7 @@ class GeminiGNIRSSpectrograph(spectrograph.Spectrograph):
         meta['ra'] = dict(ext=0, card='RA')
         meta['dec'] = dict(ext=0, card='DEC')
         meta['target'] = dict(ext=0, card='OBJECT')
-        meta['decker'] = dict(ext=0, card='DECKER')
+        meta['decker'] = dict(ext=0, card='SLIT')
 
         meta['binning'] = dict(ext=0, card=None, default='1,1')
         meta['mjd'] = dict(ext=0, card='MJD_OBS')
@@ -266,7 +255,11 @@ class GeminiGNIRSSpectrograph(spectrograph.Spectrograph):
             # Don't type pinhole, dark, or bias frames
             return np.zeros(len(fitstbl), dtype=bool)
         if ftype in ['arc', 'tilt']:
-            return good_exp & (fitstbl['idname'] == 'ARC')
+            ## FW ToDo: self.dispname does not work yet. need to replace the following later.
+            if '32/mm' in fitstbl['dispname'][0]:
+                return good_exp & (fitstbl['idname'] == 'OBJECT')
+            elif '10/mmLBSX' in fitstbl['dispname'][0]:
+                return good_exp & (fitstbl['idname'] == 'ARC')
 
         msgs.warn('Cannot determine if frames are of type {0}.'.format(ftype))
         return np.zeros(len(fitstbl), dtype=bool)
@@ -315,6 +308,10 @@ class GeminiGNIRSSpectrograph(spectrograph.Spectrograph):
         if '10/mmLBSX' in self.dispname:
             return np.array([0.050, 0.215, 0.442, 0.759])
         elif '32/mm' in self.dispname:
+            #ToDo: create self.date similar to self.dispname and use that to decide which numbers to use
+            ## Old data, i.e. before 2011
+            #return np.array([0.241211 , 0.3173828, 0.387695, 0.456054, 0.530273, 0.640625])
+            ##New data
             return np.array([0.2955097 , 0.37635756, 0.44952223, 0.51935601, 0.59489503, 0.70210309])
         else:
             msgs.error('Unrecognized disperser')

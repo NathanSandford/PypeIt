@@ -175,6 +175,10 @@ class SpecObjs(object):
         flux_attr = 'FLAM' if ret_flam else 'COUNTS'
         flux_key = '{}_{}'.format(extract_type, flux_attr)
         wave_key = '{}_WAVE'.format(extract_type)
+        # Test
+        if getattr(self, flux_key)[0] is None:
+            msgs.error("Flux not available for {}.  Try the other ".format(flux_key))
+        #
         nspec = getattr(self, flux_key)[0].size
         # Allocate arrays and unpack spectrum
         wave = np.zeros((nspec, norddet))
@@ -556,6 +560,8 @@ class SpecObjs(object):
             # Check -- If sobj had only 1 array, the BinTableHDU test will fail
             assert len(shdu) == 1, 'Bad data model!!'
             assert isinstance(shdu[0], fits.hdu.table.BinTableHDU), 'Bad data model2'
+            #shdu[0].header['DMODCLS'] = (self.__class__.__name__, 'Datamodel class')
+            #shdu[0].header['DMODVER'] = (self.version, 'Datamodel version')
             # Name
             shdu[0].name = sobj.NAME
             # Extension
@@ -645,9 +651,11 @@ class SpecObjs(object):
                 s2n.append(is2n)
             else:  # Optimal is not required to occur
                 opt_fwhm.append(0.)
-                # S2N -- use boxcar
-                ivar = specobj.BOX_COUNTS_IVAR
-                is2n = np.median(specobj.BOX_COUNTS * np.sqrt(ivar))
+                if specobj.BOX_COUNTS is None:
+                    is2n = 0.
+                else:
+                    ivar = specobj.BOX_COUNTS_IVAR
+                    is2n = np.median(specobj.BOX_COUNTS * np.sqrt(ivar))
                 s2n.append(is2n)
 
         # Generate the table, if we have at least one source

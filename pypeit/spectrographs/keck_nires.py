@@ -82,16 +82,17 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
         par['calibrations']['slitedges']['trace_thresh'] = 10.
         par['calibrations']['slitedges']['fit_min_spec_length'] = 0.4
         par['calibrations']['slitedges']['left_right_pca'] = True
+        par['calibrations']['slitedges']['fwhm_gaussian'] = 4.0
 
         # Tilt parameters
         par['calibrations']['tilts']['tracethresh'] =  10.0
         #par['calibrations']['tilts']['spat_order'] =  3
         #par['calibrations']['tilts']['spec_order'] =  3
 
-        # Flats
-        par['calibrations']['standardframe']['process']['illumflatten'] = False
-        par['scienceframe']['process']['illumflatten'] = False
-        par['scienceframe']['process']['illumflatten'] = False
+        # Processing steps
+        turn_off = dict(use_illumflat=False, use_biasimage=False, use_overscan=False, use_darkimage=False)
+        par.reset_all_processimages_par(**turn_off)
+
 
         # Extraction
         par['reduce']['skysub']['bspline_spacing'] = 0.8
@@ -104,9 +105,6 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
         par['scienceframe']['process']['satpix'] ='nothing'
         par['reduce']['extraction']['boxcar_radius'] = 0.75  # arcsec
 
-        # Overscan but not bias
-        #  This seems like a kludge of sorts
-        par['calibrations']['biasframe']['useframe'] = 'none'
 
         # Set the default exposure time ranges for the frame typing
         par['calibrations']['standardframe']['exprng'] = [None, 60]
@@ -180,15 +178,15 @@ class KeckNIRESSpectrograph(spectrograph.Spectrograph):
             # No pinhole or bias frames
             return np.zeros(len(fitstbl), dtype=bool)
         if ftype == 'standard':
-            return good_exp & (fitstbl['idname'] == 'Object')
+            return good_exp & ((fitstbl['idname'] == 'object') | (fitstbl['idname'] == 'Object'))
         if ftype == 'dark':
             return good_exp & (fitstbl['idname'] == 'dark')
         if ftype in ['pixelflat', 'trace']:
             return fitstbl['idname'] == 'domeflat'
         if ftype in 'science':
-            return good_exp & (fitstbl['idname'] == 'Object')
+            return good_exp & ((fitstbl['idname'] == 'object') | (fitstbl['idname'] == 'Object'))
         if ftype in ['arc', 'tilt']:
-            return good_exp & (fitstbl['idname'] == 'Object')
+            return good_exp & ((fitstbl['idname'] == 'object') | (fitstbl['idname'] == 'Object'))
         return np.zeros(len(fitstbl), dtype=bool)
 
 

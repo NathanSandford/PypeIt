@@ -6,14 +6,10 @@ import argparse
 import sys
 from linetools.guis.xspecgui import XSpecGui
 from PyQt5.QtWidgets import QApplication
-from astropy import units as u
 
 from pypeit import specobjs
 from pypeit import msgs
 import numpy as np
-from pypeit import utils
-from linetools.spectra.xspectrum1d import XSpectrum1D
-from pypeit.core.telluric import general_spec_reader
 from IPython import embed
 
 def parser(options=None):
@@ -35,35 +31,28 @@ def main(args):
     """ Runs the XSpecGui on an input file
     """
 
-    try:
-        sobjs = specobjs.SpecObjs.from_fitsfile(args.file)
-    except:
-        # place holder until coadd data model is sorted out
-        wave, flux, flux_ivar, flux_mask, meta_spec, head = general_spec_reader(args.file)
-        spec = XSpectrum1D.from_tuple((wave*u.AA, flux, np.sqrt(utils.inverse(flux_ivar))), masking='none')
+    sobjs = specobjs.SpecObjs.from_fitsfile(args.file)
+    # List only?
+    if args.list:
+        print("Showing object names for input file...")
+        for ii in range(len(sobjs)):
+            name = sobjs[ii].NAME
+            print("EXT{:07d} = {}".format(ii+1, name))
+        return
+
+    if args.obj is not None:
+        exten = np.where(sobjs.NAME == args.obj)[0][0]
+        if exten < 0:
+            msgs.error("Bad input object name: {:s}".format(args.obj))
     else:
-        # List only?
-        if args.list:
-            print("Showing object names for input file...")
-            for ii in range(len(sobjs)):
-                name = sobjs[ii].NAME
-                print("EXT{:07d} = {}".format(ii+1, name))
-            return
+        exten = args.exten-1 # 1-index in FITS file
 
-        if args.obj is not None:
-            exten = sobjs.name.index(args.obj)
-            if exten < 0:
-                msgs.error("Bad input object name: {:s}".format(args.obj))
-        else:
-            exten = args.exten-1 # 1-index in FITS file
+    # Check Extraction
+    if args.extract == 'OPT':
+        if sobjs[exten]['OPT_WAVE'] is None: #not in sobjs[exten]._data.keys():
+                msgs.error("Spectrum not extracted with OPT.  Try --extract=BOX")
 
-        # Check Extraction
-        if args.extract == 'OPT':
-            if sobjs[exten]['OPT_WAVE'] is None: #not in sobjs[exten]._data.keys():
-                    msgs.error("Spectrum not extracted with OPT.  Try --extract=BOX")
-
-        spec = sobjs[exten].to_xspec1d(extraction=args.extract, fluxed=args.flux)
-
+    spec = sobjs[exten].to_xspec1d(extraction=args.extract, fluxed=args.flux)
 
     # Setup
     app = QApplication(sys.argv)

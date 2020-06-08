@@ -5,6 +5,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    pypeit.spectrographs.gemini_flamingos
    pypeit.spectrographs.gemini_gmos
@@ -22,6 +23,7 @@ Submodules
    pypeit.spectrographs.magellan_mage
    pypeit.spectrographs.mdm_osmos
    pypeit.spectrographs.mmt_binospec
+   pypeit.spectrographs.not_alfosc
    pypeit.spectrographs.opticalmodel
    pypeit.spectrographs.shane_kast
    pypeit.spectrographs.slitmask

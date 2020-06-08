@@ -100,6 +100,7 @@ class MultiSlitFC(FluxCalibrate):
                                      extinct_correct=self.par['extinct_correct'],
                                      longitude=self.spectrograph.telescope['longitude'],
                                      latitude=self.spectrograph.telescope['latitude'],
+                                     extrap_sens=self.par['extrap_sens'],
                                      airmass=float(sobjs.header['AIRMASS']))
 
 
@@ -142,6 +143,7 @@ class EchelleFC(FluxCalibrate):
                 sci_obj.apply_flux_calib(wave[:, indx[0]],sensfunction[:,indx[0]],
                                          sobjs.header['EXPTIME'],
                                          extinct_correct=self.par['extinct_correct'],
+                                         extrap_sens = self.par['extrap_sens'],
                                          longitude=self.spectrograph.telescope['longitude'],
                                          latitude=self.spectrograph.telescope['latitude'],
                                          airmass=float(sobjs.header['AIRMASS']))

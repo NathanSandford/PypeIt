@@ -27,6 +27,8 @@ Here are the frametype values allowed and adopted in PypeIt:
 ========= =============================================================
 Frametype Description
 ========= =============================================================
+aligmment Used to align spatial positions in multiple slits. This frame
+          is particularly useful for slit-based IFU, such as Keck KCWI.
 arc       Spectrum of one or more calibration arc lamps
 bias      Bias frame;  typically a 0s exposure with the shutter closed
 dark      Dark frame;  typically a >0s exposure to assess dark current (shutter closed)
@@ -49,9 +51,12 @@ trace     Spectrum taken to define the slit edges and correct for
           should be the same as the science slit.
 tilt      Exposure used to trace the tilt in the wavelength solution.
           Often the same file(s) as the arc.
-unknown   File could not be automatically identified by PypeIt
+None      File could not be automatically identified by PypeIt
 ========= =============================================================
 
 It is possible (and even common for arc and flats images) that a frame can be
 assigned more than one frametype.
+
+**Warning:** The code will *not* run if your :doc:`pypeit_file` includes
+entries with *None*.  You must remove or modify those.
 

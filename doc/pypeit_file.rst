@@ -82,12 +82,15 @@ See :doc:`pypeit_par` for the complete list of parameters,
 the spectrograph specific settings, and the syntax for changing parameters.
 
 Here are notes on somewhat common edits that PypeIt users make
-(docs not yet generated!):
+(docs under construction!):
 
   - Restrict reduction (including the detectors reduced)
+  - :doc:`bias_dark`
+  - :doc:`flat_fielding`
   - Wavelength fussing
-  - SlitEdge fussing
-  - Object finding
+  - :doc:`slit_tracing`
+  - :doc:`object_finding`
+  - :doc:`reduction_tips`
 
 Setup Block
 -----------
@@ -115,6 +118,9 @@ of the following :doc:`frametype`:
  - trace -- Slit/order definition
  - pixelflat -- Flat fielding (see below if you **not** provided)
  - science -- Science exposure
+
+**Warning:** The code will *not* run if your :doc:`pypeit_file` includes
+entries with *None*.  You must remove or modify those.
 
 FlatField
 +++++++++
