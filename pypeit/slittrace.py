@@ -308,6 +308,24 @@ class SlitTraceSet(datamodel.DataContainer):
         """
         return np.where(self.spat_id == spat_id)[0][0]
 
+    def slitord_to_zero(self, slitord):
+        """
+        Convert input slitord into a zero-based index
+
+        Args:
+            slitord (int):
+
+        Returns:
+            int: zero-based index of the input spat_id
+
+        """
+        if self.pypeline in ['MultiSlit', 'IFU']:
+            return np.where(self.spat_id == slitord)[0][0]
+        elif self.pypeline in ['Echelle']:
+            return np.where(self.ech_order == slitord)[0][0]
+        else:
+            msgs.error('Unrecognized Pypeline {:}'.format(self.pypeline))
+
     def select_edges(self, initial=False, flexure=None):
         """
         Select between the initial or tweaked slit edges and allow for
@@ -606,7 +624,7 @@ class SlitTraceSet(datamodel.DataContainer):
 
     def mask_flats(self, flatImages):
         """
-        Mask from a :class:`pypeit.flatfield.FlatImages` object
+        Mask from a :class:`pypeit.flatfield.Flats` object
 
         Args:
             flatImages (:class:`pypeit.flatfield.FlatImages`):
@@ -614,7 +632,7 @@ class SlitTraceSet(datamodel.DataContainer):
         """
         # Loop on all the FLATFIELD BPM keys
         for flag in ['SKIPFLATCALIB', 'BADFLATCALIB']:
-            bad_flats = self.bitmask.flagged(flatImages.bpmflats, flag)
+            bad_flats = self.bitmask.flagged(flatImages.get_bpmflats(), flag)
             if np.any(bad_flats):
                 self.mask[bad_flats] = self.bitmask.turn_on(self.mask[bad_flats], flag)
 
