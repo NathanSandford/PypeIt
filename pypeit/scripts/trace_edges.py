@@ -7,12 +7,12 @@
 Trace slit edges for a set of images.
 """
 
-def parser(options=None):
+def parse_args(options=None, return_parser=False):
 
     import argparse
-    from pypeit import defs
+    from pypeit.spectrographs import available_spectrographs
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Require either a pypeit file or a fits file 
     inp = parser.add_mutually_exclusive_group(required=True)
@@ -26,10 +26,10 @@ def parser(options=None):
                         help='Only analyze the specified detector; otherwise analyze all or '
                              'detectors selected by the pypeit file, if provided.')
     parser.add_argument('-s', '--spectrograph', default=None, type=str,
-                        help='A valid spectrograph identifier, which is only used if providing'
-                             'files directly: {0}'.format(', '.join(defs.pypeit_spectrographs)))
+                        help='A valid spectrograph identifier, which is only used if providing '
+                             'files directly: {0}'.format(', '.join(available_spectrographs)))
     parser.add_argument('-b', '--binning', default=None, type=str,
-                        help='Image binning in spectral and spatial directions.  Only used if'
+                        help='Image binning in spectral and spatial directions.  Only used if '
                              'providing files directly; default is 1,1.')
     parser.add_argument('-p', '--redux_path', default=None,
                         help='Path to top-level output directory.  '
@@ -43,6 +43,9 @@ def parser(options=None):
     parser.add_argument('--debug', default=False, action='store_true', help='Run in debug mode.')
     parser.add_argument('--show', default=False, action='store_true',
                         help='Show the stages of trace refinements (only for the new code).')
+
+    if return_parser:
+        return parser
 
     return parser.parse_args() if options is None else parser.parse_args(options)
 
@@ -167,14 +170,13 @@ def main(args):
         print('Tracing for detector {0} finished in {1} s.'.format(det, time.perf_counter()-t))
         # Write the MasterEdges file
         edge_masterframe_name = masterframe.construct_file_name(edgetrace.EdgeTraceSet,
-                                                                master_key,
-                                                                master_dir=master_dir)
-        edges.save(edge_masterframe_name, master_dir=master_dir, master_key=master_key)
+                                                                master_key, master_dir=master_dir)
+        edges.to_master_file(edge_masterframe_name)
+
         # Write the MasterSlits file
         slit_masterframe_name = masterframe.construct_file_name(slittrace.SlitTraceSet,
                                                                 master_key, master_dir=master_dir)
-        edges.get_slits().to_master_file(slit_masterframe_name) #master_dir, master_key,  # Naming
-                              #spec.spectrograph)  # Header
+        edges.get_slits().to_master_file(slit_masterframe_name)
 
     return 0
 
